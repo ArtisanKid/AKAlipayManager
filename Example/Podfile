@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'AKAlipayManager_Example' do
+  pod 'AKAlipayManager', :path => '../'
+
+  target 'AKAlipayManager_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
