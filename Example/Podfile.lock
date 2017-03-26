@@ -1,0 +1,22 @@
+PODS:
+  - AKAlipayManager (0.1.0):
+    - AKAlipaySDK
+  - AKAlipaySDK (0.1.0)
+
+DEPENDENCIES:
+  - AKAlipayManager (from `../`)
+  - AKAlipaySDK (from `../../AKAlipaySDK`)
+
+EXTERNAL SOURCES:
+  AKAlipayManager:
+    :path: ../
+  AKAlipaySDK:
+    :path: ../../AKAlipaySDK
+
+SPEC CHECKSUMS:
+  AKAlipayManager: 77381e5fbece562cd2920183915faf7118185990
+  AKAlipaySDK: 1aa6fac283a1b3c7b974e82815093b9a5cf0c7e0
+
+PODFILE CHECKSUM: 9fce76ff45789361e029b0c495e388695f51f7b0
+
+COCOAPODS: 1.1.1

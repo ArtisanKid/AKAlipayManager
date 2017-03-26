@@ -37,6 +37,21 @@ TODO: Add long description of the pod here.
   # }
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+
+  s.frameworks = 'CFNetwork', 'CoreGraphics', 'CoreMotion', 'CoreTelephony', 'CoreText', 'QuartzCore', 'SystemConfiguration'
+  s.libraries = 'c++', 'z'
+  s.dependency 'AKAlipaySDK'
+
+  #静态库传递详细资料查看这里 http://luoxianming.cn/2016/03/27/CocoaPods/
+  #静态库传递要求Podfile中添加以下代码
+  #pre_install do |installer|
+    #workaround for https://github.com/CocoaPods/CocoaPods/issues/3289
+    #def installer.verify_no_static_framework_transitive_dependencies; end
+  #end
+
+  s.pod_target_xcconfig = {
+    'OTHER_LDFLAGS' => '-framework "AlipaySDK"',
+    'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/../../../AKAlipaySDK/**'
+  }
+
 end

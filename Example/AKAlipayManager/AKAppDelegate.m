@@ -7,6 +7,7 @@
 //
 
 #import "AKAppDelegate.h"
+#import <AKAlipayManager/AKAlipayManager.h>
 
 @implementation AKAppDelegate
 
