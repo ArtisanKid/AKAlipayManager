@@ -31,11 +31,7 @@ typedef void (^AKAlipayManagerFailure)(NSError *error);
 + (AKAlipayManager *)manager;
 
 @property (class, nonatomic, assign, getter=isDebug) BOOL debug;
-
-+ (void)setAppID:(NSString *)appID secretKey:(NSString *)secretKey;
-
-//设置商家ID
-+ (void)setPartnerID:(NSString *)partnerID;
+@property (class, nonatomic, strong) NSString *scheme;
 
 //处理从Application回调方法获取的URL
 + (BOOL)handleOpenURL:(NSURL *)url;

@@ -51,7 +51,7 @@ TODO: Add long description of the pod here.
 
   s.pod_target_xcconfig = {
     'OTHER_LDFLAGS' => '-framework "AlipaySDK"',
-    'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/../../../AKAlipaySDK/**'
+    'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/../../AKAlipaySDK/**'
   }
 
 end

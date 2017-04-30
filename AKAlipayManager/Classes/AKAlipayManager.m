@@ -14,6 +14,7 @@ const NSString * const AKAlipayManagerErrorCodeKey = @"code";
 const NSString * const AKAlipayManagerErrorMessageKey = @"message";
 const NSString * const AKAlipayManagerErrorDetailKey = @"detail";
 
+static const NSString * const AKAlipayManagerMemoKey = @"memo";
 static const NSString * const AKAlipayManagerResultCodeKey = @"resultStatus";
 static const NSString * const AKAlipayManagerResultKey = @"result";
 static const NSString * const AKAlipayManagerResultResponseKey = @"alipay_trade_app_pay_response";
@@ -42,13 +43,6 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
 };
 
 @interface AKAlipayManager ()
-
-@property (nonatomic, assign, getter=isDebug) BOOL debug;
-
-@property (nonatomic, strong) NSString *appID;
-@property (nonatomic, strong) NSString *secretKey;
-
-@property (nonatomic, strong) NSString *partnerID;
 
 @property (nonatomic, strong) AKAlipayManagerSuccess paySuccess;
 @property (nonatomic, strong) AKAlipayManagerFailure payFailure;
@@ -83,30 +77,15 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
 }
 
 #pragma mark- Public Method
-+ (void)setDebug:(BOOL)debug {
-    self.manager.debug = debug;
-}
-
-+ (BOOL)isDebug {
-    return self.manager.isDebug;
-}
-
-+ (void)setAppID:(NSString *)appID secretKey:(NSString *)secretKey {
-    self.manager.appID = appID;
-    self.manager.secretKey = secretKey;
-}
-
-+ (void)setPartnerID:(NSString *)partnerID {
-    self.manager.partnerID = partnerID;
-}
-
 + (BOOL)handleOpenURL:(NSURL *)url {
-    //首先由QQApiInterface来判断是不是OSS请求
-    //如果不是那么再判断是不是TencentOAuth请求
     __block BOOL handle = NO;
     [[AlipaySDK defaultService] processOrderWithPaymentResult:url
                                               standbyCallback:^(NSDictionary *resultDic) {
                                                   handle = [self.manager handleResult:resultDic];
+                                                  if(handle) {
+                                                      self.manager.paySuccess = nil;
+                                                      self.manager.payFailure = nil;
+                                                  }
                                               }];
     return handle;
 }
@@ -114,8 +93,8 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
 + (void)pay:(NSString *)order
     success:(AKAlipayManagerSuccess)success
     failure:(AKAlipayManagerFailure)failure {
-    AKAlipay_String_Nilable_Return(self.manager.partnerID, NO, {
-        [self.manager failure:failure message:@"未设置partnerID"];
+    AKAlipay_String_Nilable_Return(self.scheme, NO, {
+        [self.manager failure:failure message:@"未设置scheme"];
     });
     
     AKAlipay_String_Nilable_Return(order, NO, {
@@ -126,9 +105,12 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
     self.manager.payFailure = failure;
     
     [[AlipaySDK defaultService] payOrder:order
-                              fromScheme:@""
+                              fromScheme:self.scheme
                                 callback:^(NSDictionary *resultDic) {
+                                    //wap支付结果回调
                                     [self.manager handleResult:resultDic];
+                                    self.manager.paySuccess = nil;
+                                    self.manager.payFailure = nil;
                                 }];
 }
 
@@ -162,6 +144,11 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
      }
      */
     
+    NSString *memo = resultDic[AKAlipayManagerResultCodeKey];
+    AKAlipay_String_Nilable_Return(memo, NO, {
+        [self failure:self.payFailure message:@"同步解析结果memo错误"];
+    }, NO);
+    
     NSString *resultCodeStr = resultDic[AKAlipayManagerResultCodeKey];
     AKAlipay_String_Nilable_Return(resultCodeStr, NO, {
         [self failure:self.payFailure message:@"同步解析结果resultCode错误"];
@@ -181,13 +168,13 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
     }
     
     NSString *responseCodeStr = response[AKAlipayManagerResultResponseCodeKey];
-    AKAlipay_String_Nilable_Return(self.partnerID, NO, {
+    AKAlipay_String_Nilable_Return(responseCodeStr, NO, {
         [self failure:self.payFailure message:@"同步解析结果responseCode错误"];
     }, NO);
     AKAlipayResultResponseCode responseCode = [responseCodeStr integerValue];
     
     NSString *responseMessage = response[AKAlipayManagerResultResponseMessageKey];
-    AKAlipay_String_Nilable_Return(self.partnerID, NO, {
+    AKAlipay_String_Nilable_Return(responseMessage, NO, {
         [self failure:self.payFailure message:@"同步解析结果responseMessage错误"];
     }, NO);
     
@@ -203,6 +190,7 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
         return NO;
     }
     
+    !self.paySuccess ? : self.paySuccess();
     return YES;
 }
 
@@ -235,56 +223,8 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
     return alert;
 }
 
-//+ (NSString *)identifier {
-//    NSTimeInterval timestamp = [NSDate date].timeIntervalSince1970;
-//    return @(timestamp).description;
-//}
-//
-//- (BOOL)checkAppInstalled {
-//    if([QQApiInterface isQQInstalled]) {
-//        return YES;
-//    }
-//    
-//    [self showAlert:@"当前您还没有安装QQ，是否安装QQ？"];
-//    return NO;
-//}
-//
-//- (BOOL)checkAppVersion {
-//    if([QQApiInterface isQQSupportApi]) {
-//        return YES;
-//    }
-//    
-//    [self showAlert:@"当前QQ版本过低，是否升级？"];
-//    return NO;
-//}
-//
-//- (void)showAlert:(NSString *)alertMessage {
-//    UIViewController *rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
-//    
-//    UIAlertController *alertController = [UIAlertController
-//                                          alertControllerWithTitle:@"提示"
-//                                          message:alertMessage
-//                                          preferredStyle:UIAlertControllerStyleAlert];
-//    UIAlertAction *downloadAction = [UIAlertAction actionWithTitle:@"下载"
-//                                                             style:UIAlertActionStyleDefault
-//                                                           handler:^(UIAlertAction * _Nonnull action) {
-//                                                               [rootViewController dismissViewControllerAnimated:YES completion:^{
-//                                                                   NSString *appStoreURL = [QQApiInterface getQQInstallUrl];
-//                                                                   [[UIApplication sharedApplication] openURL:[NSURL URLWithString:appStoreURL]];
-//                                                               }];
-//                                                           }];
-//    UIAlertAction *cancleAction = [UIAlertAction actionWithTitle:@"取消登录"
-//                                                           style:UIAlertActionStyleCancel
-//                                                         handler:^(UIAlertAction * _Nonnull action) {
-//                                                             [rootViewController dismissViewControllerAnimated:YES completion:^{}];
-//                                                         }];
-//    [alertController addAction:downloadAction];
-//    [alertController addAction:cancleAction];
-//    [rootViewController presentViewController:alertController animated:YES completion:^{}];
-//}
-
 - (void)failure:(AKAlipayManagerFailure)failure message:(NSString *)message {
-    if(self.isDebug) {
+    if(AKAlipayManager.isDebug) {
         AKAlipayManagerLog(@"%@", message);
     }
     
@@ -301,7 +241,7 @@ typedef NS_ENUM(NSUInteger, AKAlipayResultResponseCode){
 }
 
 - (void)failure:(AKAlipayManagerFailure)failure code:(NSInteger)code message:(NSString *)message detail:(NSString *)detail {
-    if(self.isDebug) {
+    if(AKAlipayManager.isDebug) {
         AKAlipayManagerLog(@"%@", message);
         AKAlipayManagerLog(@"%@", detail);
     }
