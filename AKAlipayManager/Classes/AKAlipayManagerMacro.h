@@ -10,7 +10,12 @@
 #define AKAlipayManagerMacro_h
 
 #if DEBUG
-    #define AKAlipayManagerLog(_Format, ...) NSLog((@"\n[File:%s]\n[Line:%d]\n[Function:%s]\n" _Format @"\n"), __FILE__, __LINE__, __PRETTY_FUNCTION__, ## __VA_ARGS__);
+    #define AKAlipayManagerLog(_Format, ...)\
+    do {\
+        NSString *file = [NSString stringWithUTF8String:__FILE__].lastPathComponent;\
+        NSLog((@"\n[%@][%d][%s]\n" _Format), file, __LINE__, __PRETTY_FUNCTION__, ## __VA_ARGS__);\
+        printf("\n");\
+    } while(0)
 #else
     #define AKAlipayManagerLog(_Format, ...)
 #endif
